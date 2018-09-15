@@ -1,19 +1,17 @@
 #include <pthread.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /* this function is run by the second thread */
-void *inc_x(void *x_void_ptr)
-{
+void *inc_x(void *x_void_ptr){
+    /* increment x to 100 */
+    int *x_ptr = (int *)x_void_ptr;
+    while(++(*x_ptr) < 100);
 
-/* increment x to 100 */
-int *x_ptr = (int *)x_void_ptr;
-while(++(*x_ptr) < 100);
+    printf("x increment finished\n");
 
-printf("x increment finished\n");
-
-/* the function must return something - NULL will do */
-return NULL;
-
+    /* the function must return something - NULL will do */
+    return NULL;
 }
 
 int main(){
@@ -22,6 +20,7 @@ int main(){
 
     /* show the initial values of x and y */
     printf("x: %d, y: %d\n", x, y);
+    sleep(2);
 
     /* this variable is our reference to the second thread */
     pthread_t inc_x_thread;
