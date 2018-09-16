@@ -1,48 +1,74 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <sys/time.h>
+
+#define LINE_LEN 30
+#define ARRAY_SIZE 20
+
+int done = 0;
 
 /* this function is run by the second thread */
-void *inc_x(void *x_void_ptr){
+void *countdown(void *count_void_ptr){
     /* increment x to 100 */
-    int *x_ptr = (int *)x_void_ptr;
-    while(++(*x_ptr) < 100);
+    int *count_ptr = (int *)count_void_ptr;
+    while(++(*count_ptr) < 5){   
+        sleep(1);
+    }
+    printf("Time's UP!\n");
+    done = 1;
+    return NULL;
+}
 
-    printf("x increment finished\n");
-
-    /* the function must return something - NULL will do */
+void *accept_input(void *answer_void_ptr){
+    int i=0;
+    char *answer_ptr = (char *)answer_void_ptr;
+    printf("Enter your answers: ");
+    for(; done != 1;i++){
+        //scanf("%s", answer_ptr);
+        fgets(answer_ptr,LINE_LEN,stdin);
+    }
     return NULL;
 }
 
 int main(){
 
-    int x = 0, y = 0;
+    int timer, count = 0, y = 0, i=0;
+    char answer[ARRAY_SIZE][LINE_LEN];
 
-    /* show the initial values of x and y */
-    printf("x: %d, y: %d\n", x, y);
-    sleep(2);
+    /* initialize reference to second astatic cnd third thread */
+    pthread_t counter_thread, accept_thread;
+    printf("Welcome to Family Feud!\nQuestion: According to survey, what are the top 5 activites people do during the summer?\n");
+    for(timer=3;timer>0;timer--){
+        printf("%d...\n",timer);
+        sleep(1);
+    }
 
-    /* this variable is our reference to the second thread */
-    pthread_t inc_x_thread;
-
-    /* create a second thread which executes inc_x(&x) */
-    if(pthread_create(&inc_x_thread, NULL, inc_x, &x)) {
+    /* create a second thread which executes countdown(&count) */
+    if(pthread_create(&counter_thread, NULL, countdown, &count)) {
         fprintf(stderr, "Error creating thread\n");
         return 1;
     }
-    /* increment y to 100 in the first thread */
-    while(++y < 100);
+    /* create a third thread for input */
+    if(pthread_create(&accept_thread, NULL, accept_input, &answer)) {
+        fprintf(stderr, "Error creating thread\n");
+        return 1;
+    }
 
-    printf("y increment finished\n");
-
-    /* wait for the second thread to finish */
-    if(pthread_join(inc_x_thread, NULL)) {
+    /* wait for the 2nd thread to finish */
+    if(pthread_join(counter_thread, NULL)) {
         fprintf(stderr, "Error joining thread\n");
         return 2;
     }
+    //pthread_exit(NULL);
 
-    /* show the results - x is now 100 thanks to the second thread */
-    printf("x: %d, y: %d\n", x, y);
+    printf("Count: %d\nShe said: \n", count);
+    for(;i<count;i++){
+        printf("%s\n",answer[i]);
+    }
 
     return 0;
 
