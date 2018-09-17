@@ -9,7 +9,7 @@
 
 #define LINE_LEN 30
 #define ARRAY_SIZE 20
-#define COUNTDOWN_TIME 12 //set countdown time in seconds
+#define COUNTDOWN_TIME 20 //set countdown time in seconds
 #define MAX_ANSWER 5 /* Number of answers to be considered */
 
 int done = 0;
