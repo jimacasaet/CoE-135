@@ -82,7 +82,7 @@ int main(){
         }
         else{
             strcpy(answer[i],answers[i]);
-            printf("%d %s\n",i, answer[i]);
+            //printf("%d %s\n",i, answer[i]);
         }
     }
 
@@ -131,7 +131,7 @@ int main(){
         printf("%s\n",key[i]);
     }
 
-    printf("\nIncorrect Answers (%d): \n",k);
+    printf("\nIncorrect Answers:\n");
     if(k!=0){
         for(i=0;i<k;i++){
             if(strcmp(wrong[i],"")==0){
