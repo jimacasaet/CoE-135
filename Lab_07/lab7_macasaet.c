@@ -4,56 +4,6 @@
  * CoE 135 HLM FVW
  */
 
-/*#include <linux/proc_fs.h>
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/sched.h>
-#include <asm/uaccess.h>
-#include <linux/uaccess.h>
-
-int len, temp;
-
-char *msg;
-
-int read_proc(struct file *filp,char *buf,size_t count,loff_t *offp ) 
-{
-
-    if(count>temp){
-        count=temp;
-    }
-    temp=temp-count;
-    copy_to_user(buf,msg, count);
-    if(count==0){
-        temp=len;
-    }
-    return count;
-}
-
-struct file_operations proc_fops = {
-    read: read_proc
-};
-void create_new_proc_entry(void) {
-    proc_create("hello",0,NULL,&proc_fops);
-
-    msg=" Hello World ";
-    len=strlen(msg);
-    temp=len;
-    printk(KERN_INFO "1.len=%d",len);
-}
-
-int proc_init (void) {
-    create_new_proc_entry();
-    return 0;
-}
-
-void proc_cleanup(void) {
-    remove_proc_entry("hello",NULL);
-}
-
-MODULE_LICENSE("GPL"); 
-module_init(proc_init);
-module_exit(proc_cleanup);*/
-
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -61,43 +11,71 @@ module_exit(proc_cleanup);*/
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 #define BUFSIZE  100
- 
- 
-MODULE_LICENSE("Dual BSD/GPL");
-MODULE_AUTHOR("Liran B.H");
- 
- 
+
+MODULE_LICENSE("GPL"); 
+MODULE_AUTHOR("John Rufino Macasaet");
+MODULE_DESCRIPTION("Prints nth triangular number.");
+
+static int irq=20;
+module_param(irq,int,0660);
+
+static int mode=1;
+module_param(mode,int,0660);
+
 static struct proc_dir_entry *ent;
- 
+
 static ssize_t mywrite(struct file *file, const char __user *ubuf,size_t count, loff_t *ppos) 
 {
-	printk( KERN_DEBUG "write handler\n");
-	return -1;
+	int num,c,i,m;
+	char buf[BUFSIZE];
+	if(*ppos > 0 || count > BUFSIZE)
+		return -EFAULT;
+	if(copy_from_user(buf,ubuf,count))
+		return -EFAULT;
+	num = sscanf(buf,"%d %d",&i,&m);
+	if(num != 2)
+		return -EFAULT;
+	irq = i; 
+	mode = m;
+	c = strlen(buf);
+	*ppos = c;
+	return c;
 }
- 
+
 static ssize_t myread(struct file *file, char __user *ubuf,size_t count, loff_t *ppos) 
 {
-	printk( KERN_DEBUG "read handler\n");
-	return 0;
+	char buf[BUFSIZE];
+	int len=0;
+	if(*ppos > 0 || count < BUFSIZE)
+		return 0;
+	len += sprintf(buf,"irq = %d\n",irq);
+	len += sprintf(buf + len,"mode = %d\n",mode);
+	
+	if(copy_to_user(ubuf,buf,len))
+		return -EFAULT;
+	*ppos = len;
+	return len;
 }
- 
+
 static struct file_operations myops = 
 {
 	.owner = THIS_MODULE,
 	.read = myread,
 	.write = mywrite,
 };
- 
+
 static int simple_init(void)
 {
 	ent=proc_create("mydev",0660,NULL,&myops);
+	printk(KERN_ALERT "LKM inserted.\n");
 	return 0;
 }
- 
+
 static void simple_cleanup(void)
 {
 	proc_remove(ent);
+	printk(KERN_WARNING "LKM removed.\n");
 }
- 
+
 module_init(simple_init);
 module_exit(simple_cleanup);
